@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="manifest" href="./manifest.json">
+  <meta charset="utf-8">
+  <title>АктОффлайн</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="./index.js"></script>
+
+  <script>
+    if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('SW зарегистрирован:', reg))
+          .catch(err => console.error('Ошибка SW:', err))
+      })
+    }
+  </script>
+</body>
+</html>
