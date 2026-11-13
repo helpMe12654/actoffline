@@ -1,35 +1,51 @@
 const React = window.React
 const { useState, useEffect, useRef } = React
 
+// Ссылка на твой бэкенд на Render
 const API = 'https://actoffline.onrender.com/api'
 
-// Простые стили для красоты
+// --- СТИЛИ (чтобы не выглядело как Windows 95) ---
 const styles = {
-  container: { fontFamily: 'Arial, sans-serif', maxWidth: 600, margin: '0 auto', padding: 20 },
-  header: { background: '#2196F3', color: '#fff', padding: 15, borderRadius: 8, marginBottom: 20, textAlign: 'center' },
-  card: { background: '#fff', border: '1px solid #ddd', borderRadius: 8, padding: 15, marginBottom: 15, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' },
-  button: { background: '#4CAF50', color: 'white', border: 'none', padding: '10px 15px', borderRadius: 5, cursor: 'pointer', fontSize: 14, marginRight: 10 },
-  buttonRed: { background: '#f44336', color: 'white', border: 'none', padding: '10px 15px', borderRadius: 5, cursor: 'pointer', fontSize: 14 },
-  buttonGray: { background: '#9e9e9e', color: 'white', border: 'none', padding: '10px 15px', borderRadius: 5, cursor: 'pointer', fontSize: 14 },
-  input: { width: '100%', padding: 10, marginTop: 5, marginBottom: 15, border: '1px solid #ccc', borderRadius: 5, boxSizing: 'border-box', fontSize: 16 },
-  status: { display: 'inline-block', padding: '3px 8px', borderRadius: 12, fontSize: 12, color: '#fff', marginLeft: 10 },
-  offlineBadge: { background: '#FF9800', color: '#fff', padding: '10px', borderRadius: 5, marginBottom: 15, textAlign: 'center', fontWeight: 'bold' }
+  app: { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', backgroundColor: '#f4f7f6', minHeight: '100vh', paddingBottom: 40 },
+  header: { backgroundColor: '#ffffff', padding: '15px 20px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 },
+  logo: { fontSize: 20, fontWeight: 'bold', color: '#2196F3', margin: 0 },
+  container: { maxWidth: 600, margin: '0 auto', padding: '20px' },
+  tabs: { display: 'flex', marginBottom: 20, backgroundColor: '#e0e0e0', borderRadius: 8, padding: 4 },
+  tab: { flex: 1, textAlign: 'center', padding: '10px 0', borderRadius: 6, cursor: 'pointer', fontWeight: 'bold', color: '#555', transition: '0.2s' },
+  tabActive: { backgroundColor: '#fff', color: '#2196F3', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' },
+  card: { backgroundColor: '#fff', borderRadius: 12, padding: 20, marginBottom: 15, boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid #eaeaea' },
+  cardTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 5 },
+  cardSub: { fontSize: 14, color: '#777', marginBottom: 15 },
+  btnPrimary: { backgroundColor: '#2196F3', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: 8, fontSize: 16, fontWeight: 'bold', cursor: 'pointer', width: '100%', transition: 'background 0.2s' },
+  btnSuccess: { backgroundColor: '#4CAF50', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: 8, fontSize: 16, fontWeight: 'bold', cursor: 'pointer', width: '100%' },
+  btnDanger: { backgroundColor: '#f44336', color: '#fff', border: 'none', padding: '10px 15px', borderRadius: 8, fontSize: 14, cursor: 'pointer' },
+  input: { width: '100%', padding: '12px', marginBottom: 15, border: '1px solid #ccc', borderRadius: 8, fontSize: 16, boxSizing: 'border-box', outline: 'none' },
+  label: { display: 'block', marginBottom: 5, fontWeight: 'bold', fontSize: 14, color: '#444' },
+  badge: { display: 'inline-block', padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase' },
+  modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 100, padding: 20 },
+  modalContent: { backgroundColor: '#fff', borderRadius: 12, padding: 20, width: '100%', maxWidth: 400, boxShadow: '0 10px 25px rgba(0,0,0,0.2)' },
+  offlineBar: { backgroundColor: '#FF9800', color: '#fff', padding: 10, textAlign: 'center', fontWeight: 'bold', position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 15 }
 }
 
 export default function App() {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [selectedTask, setSelectedTask] = useState(null)
-  const [syncMessage, setSyncMessage] = useState('')
   const [offlineCount, setOfflineCount] = useState(0)
+  const [syncMessage, setSyncMessage] = useState('')
+  
+  // Состояния для вкладок и модалок
+  const [activeTab, setActiveTab] = useState('active') // 'active' | 'done'
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [newAddress, setNewAddress] = useState('')
+  const [newClient, setNewClient] = useState('')
 
   const loadTasks = () => {
     if (!navigator.onLine) { setLoading(false); return }
     fetch(`${API}/tasks`)
       .then((r) => r.json())
       .then((data) => { setTasks(data); setLoading(false) })
-      .catch((err) => { if (navigator.onLine) setError(err.message); setLoading(false) })
+      .catch(() => setLoading(false))
   }
 
   const checkOffline = () => {
@@ -63,75 +79,109 @@ export default function App() {
     const remaining = queue.slice(successCount)
     localStorage.setItem('offlineActs', JSON.stringify(remaining))
     setOfflineCount(remaining.length)
-    setSyncMessage(`Синхронизировано: ${successCount}`)
+    setSyncMessage('')
     loadTasks()
-    setTimeout(() => setSyncMessage(''), 3000)
   }
 
-  const clearQueue = () => {
-    localStorage.removeItem('offlineActs')
-    checkOffline()
-    setSyncMessage('Очередь очищена')
-    setTimeout(() => setSyncMessage(''), 3000)
+  const handleCreateTask = async () => {
+    if (!newAddress || !newClient) return
+    try {
+      await fetch(`${API}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: newAddress, clientName: newClient })
+      })
+      setShowAddModal(false)
+      setNewAddress('')
+      setNewClient('')
+      loadTasks()
+    } catch (e) {
+      alert('Ошибка при создании задания')
+    }
   }
-
-  if (loading) return <div style={styles.container}>Загрузка...</div>
-  if (error) return <div style={styles.container}>Ошибка: {error}</div>
 
   if (selectedTask) {
-    return (
-      <ActForm
-        task={selectedTask}
-        onClose={() => {
-          setSelectedTask(null)
-          loadTasks()
-          setTimeout(() => checkOffline(), 100)
-        }}
-      />
-    )
+    return <ActForm task={selectedTask} onClose={() => { setSelectedTask(null); loadTasks(); checkOffline() }} />
   }
 
+  // Фильтрация задач по вкладкам
+  const activeTasks = tasks.filter(t => t.status !== 'done')
+  const doneTasks = tasks.filter(t => t.status === 'done')
+  const currentTasks = activeTab === 'active' ? activeTasks : doneTasks
+
   return (
-    <div style={styles.container}>
+    <div style={styles.app}>
       <div style={styles.header}>
-        <h1 style={{ margin: 0 }}>АктОффлайн</h1>
+        <h1 style={styles.logo}>АктОффлайн</h1>
+        <button style={{ ...styles.btnPrimary, width: 'auto', padding: '8px 15px', fontSize: 14 }} onClick={() => setShowAddModal(true)}>
+          + Задание
+        </button>
       </div>
 
+      <div style={styles.container}>
+        {/* Вкладки */}
+        <div style={styles.tabs}>
+          <div style={{ ...styles.tab, ...(activeTab === 'active' ? styles.tabActive : {}) }} onClick={() => setActiveTab('active')}>
+            Активные ({activeTasks.length})
+          </div>
+          <div style={{ ...styles.tab, ...(activeTab === 'done' ? styles.tabActive : {}) }} onClick={() => setActiveTab('done')}>
+            Выполненные ({doneTasks.length})
+          </div>
+        </div>
+
+        {loading && <p style={{ textAlign: 'center', color: '#777' }}>Загрузка...</p>}
+        {!loading && currentTasks.length === 0 && <p style={{ textAlign: 'center', color: '#777', marginTop: 40 }}>Заданий нет</p>}
+
+        {currentTasks.map((task) => (
+          <div key={task.id} style={styles.card}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <div style={styles.cardTitle}>{task.clientName}</div>
+                <div style={styles.cardSub}>📍 {task.address}</div>
+              </div>
+              {task.status === 'done' ? (
+                <span style={{ ...styles.badge, backgroundColor: '#E8F5E9', color: '#4CAF50' }}>Выполнено</span>
+              ) : (
+                <span style={{ ...styles.badge, backgroundColor: '#E3F2FD', color: '#2196F3' }}>В работе</span>
+              )}
+            </div>
+            {task.status !== 'done' && (
+              <button style={{ ...styles.btnPrimary, marginTop: 15 }} onClick={() => setSelectedTask(task)}>
+                Заполнить акт
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Плавающая панель синхронизации */}
       {offlineCount > 0 && (
-        <div style={styles.offlineBadge}>
-          Ожидают синхронизации: {offlineCount} актов
+        <div style={styles.offlineBar}>
+          <span>Не синхронизировано: {offlineCount}</span>
+          <button style={{ ...styles.btnSuccess, width: 'auto', padding: '6px 12px', fontSize: 14 }} onClick={syncOfflineActs}>
+            Синхронизировать
+          </button>
         </div>
       )}
 
-      <div style={{ marginBottom: 20 }}>
-        <button style={styles.button} onClick={syncOfflineActs} disabled={offlineCount === 0}>
-          Синхронизировать
-        </button>
-        {offlineCount > 0 && (
-          <button style={styles.buttonRed} onClick={clearQueue}>
-            Очистить
-          </button>
-        )}
-        {syncMessage && <span style={{ marginLeft: 10, color: 'green', fontWeight: 'bold' }}>{syncMessage}</span>}
-      </div>
-
-      <h2>Задания</h2>
-      {tasks.length === 0 && <p>Заданий нет</p>}
-      
-      {tasks.map((task) => (
-        <div key={task.id} style={styles.card}>
-          <div style={{ fontWeight: 'bold', fontSize: 18 }}>{task.address}</div>
-          <div style={{ color: '#666', marginTop: 5 }}>{task.clientName}</div>
-          <div style={{ marginTop: 10 }}>
-            <span style={{ ...styles.status, background: task.status === 'done' ? '#4CAF50' : '#2196F3' }}>
-              {task.status === 'done' ? 'Выполнено' : 'В ожидании'}
-            </span>
+      {/* Модалка добавления задания */}
+      {showAddModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent}>
+            <h2 style={{ marginTop: 0, marginBottom: 20, fontSize: 20 }}>Новое задание</h2>
+            <label style={styles.label}>ФИО Клиента</label>
+            <input style={styles.input} value={newClient} onChange={e => setNewClient(e.target.value)} placeholder="Иванов Иван" />
+            
+            <label style={styles.label}>Адрес</label>
+            <input style={styles.input} value={newAddress} onChange={e => setNewAddress(e.target.value)} placeholder="ул. Ленина, д. 1" />
+            
+            <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+              <button style={{ ...styles.btnPrimary, backgroundColor: '#ccc', color: '#333' }} onClick={() => setShowAddModal(false)}>Отмена</button>
+              <button style={styles.btnSuccess} onClick={handleCreateTask}>Создать</button>
+            </div>
           </div>
-          <button style={{ ...styles.button, marginTop: 15 }} onClick={() => setSelectedTask(task)}>
-            Заполнить акт
-          </button>
         </div>
-      ))}
+      )}
     </div>
   )
 }
@@ -204,14 +254,14 @@ function ActForm({ task, onClose }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(act),
         })
-        setMessage('Акт сохранён на сервере')
+        setMessage('Успешно сохранено на сервере')
       } catch (e) {
         saveOffline(act)
-        setMessage('Нет связи с сервером. Акт сохранён офлайн.')
+        setMessage('Ошибка сети. Сохранено офлайн.')
       }
     } else {
       saveOffline(act)
-      setMessage('Нет интернета. Акт сохранён офлайн.')
+      setMessage('Нет интернета. Сохранено офлайн.')
     }
     setSaving(false)
   }
@@ -223,49 +273,51 @@ function ActForm({ task, onClose }) {
   }
 
   return (
-    <div style={styles.container}>
+    <div style={styles.app}>
       <div style={styles.header}>
-        <h2 style={{ margin: 0 }}>Заполнение акта</h2>
+        <button style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', padding: 0 }} onClick={onClose}>←</button>
+        <h2 style={{ margin: 0, fontSize: 18 }}>Новый акт</h2>
+        <div style={{ width: 24 }}></div>
       </div>
-      
-      <button style={styles.buttonGray} onClick={onClose}>← Назад к списку</button>
-      
-      <div style={{ ...styles.card, marginTop: 15 }}>
-        <p><strong>Адрес:</strong> {task.address}</p>
 
-        <label>ФИО клиента</label>
-        <input style={styles.input} value={clientFio} onChange={(e) => setClientFio(e.target.value)} />
+      <div style={styles.container}>
+        <div style={styles.card}>
+          <p style={{ margin: '0 0 15px 0', color: '#777' }}>Задание: <strong>{task.address}</strong></p>
 
-        <label>Перечень работ</label>
-        <textarea style={{ ...styles.input, height: 60 }} value={works} onChange={(e) => setWorks(e.target.value)} />
+          <label style={styles.label}>ФИО клиента</label>
+          <input style={styles.input} value={clientFio} onChange={(e) => setClientFio(e.target.value)} />
 
-        <label>Сумма (руб.)</label>
-        <input style={styles.input} type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
+          <label style={styles.label}>Перечень работ</label>
+          <textarea style={{ ...styles.input, height: 80, resize: 'vertical' }} value={works} onChange={(e) => setWorks(e.target.value)} placeholder="Опишите выполненные работы..." />
 
-        <label>Подпись клиента</label>
-        <div style={{ border: '2px dashed #ccc', borderRadius: 5, width: 300, height: 150, background: '#fafafa', marginTop: 5 }}>
-          <canvas
-            ref={canvasRef}
-            width={300}
-            height={150}
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
-            onTouchStart={startDrawing}
-            onTouchMove={draw}
-            onTouchEnd={stopDrawing}
-            style={{ touchAction: 'none' }}
-          />
+          <label style={styles.label}>Сумма (руб.)</label>
+          <input style={styles.input} type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" />
+
+          <label style={styles.label}>Подпись клиента</label>
+          <div style={{ border: '2px dashed #ccc', borderRadius: 8, width: '100%', height: 200, background: '#fafafa', marginTop: 5, marginBottom: 10, overflow: 'hidden' }}>
+            <canvas
+              ref={canvasRef}
+              width={400}
+              height={200}
+              onMouseDown={startDrawing}
+              onMouseMove={draw}
+              onMouseUp={stopDrawing}
+              onMouseLeave={stopDrawing}
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchEnd={stopDrawing}
+              style={{ touchAction: 'none', width: '100%', height: '100%' }}
+            />
+          </div>
+          <button style={{ background: 'none', border: 'none', color: '#2196F3', cursor: 'pointer', padding: 0, fontSize: 14, marginBottom: 20 }} onClick={clearCanvas}>Очистить подпись</button>
         </div>
-        <button style={{ ...styles.buttonGray, marginTop: 10 }} onClick={clearCanvas}>Очистить подпись</button>
+
+        <button style={styles.btnSuccess} onClick={handleSave} disabled={saving}>
+          {saving ? 'Сохранение...' : 'Сохранить акт'}
+        </button>
+
+        {message && <p style={{ textAlign: 'center', color: message.includes('офлайн') ? '#FF9800' : '#4CAF50', fontWeight: 'bold', marginTop: 15 }}>{message}</p>}
       </div>
-
-      <button style={styles.button} onClick={handleSave} disabled={saving}>
-        {saving ? 'Сохранение...' : 'Сохранить акт'}
-      </button>
-
-      {message && <p style={{ color: '#4CAF50', fontWeight: 'bold' }}>{message}</p>}
     </div>
   )
 }
