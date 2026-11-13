@@ -1,7 +1,7 @@
 const React = window.React
 const { useState, useEffect, useRef } = React
 
-const API = 'http://localhost:3000/api'
+const API = 'https://actoffline.onrender.com/api'
 
 // Простые стили для красоты
 const styles = {
