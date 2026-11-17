@@ -43,7 +43,7 @@ export default function App() {
 
   const loadTasks = () => {
     if (!navigator.onLine) { setLoading(false); return }
-    fetch(`${API}/tasks`)
+    fetch(API + '/tasks')
       .then((r) => r.json())
       .then((data) => { setTasks(data); setLoading(false) })
       .catch(() => setLoading(false))
@@ -69,7 +69,7 @@ export default function App() {
     let successCount = 0
     for (const act of queue) {
       try {
-        const res = await fetch(`${API}/acts`, {
+        const res = await fetch(API + '/acts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(act),
@@ -88,7 +88,7 @@ export default function App() {
     if (!newAddress || !newClient || !newWorks) return
     
     try {
-      await fetch(`${API}/tasks`, {
+      await fetch(API + '/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -114,7 +114,7 @@ export default function App() {
   const handleDeleteTask = async (id) => {
     if (window.confirm('Вы уверены, что хотите удалить это задание?')) {
       try {
-        await fetch(`${API}/tasks/${id}`, { method: 'DELETE' })
+        await fetch(API + '/tasks/' + id, { method: 'DELETE' })
         loadTasks()
       } catch (e) {
         alert('Ошибка при удалении')
@@ -228,10 +228,10 @@ export default function App() {
             <input style={styles.input} value={newClient} onChange={e => setNewClient(e.target.value)} placeholder="Иванов Иван" />
 
             {clientType === 'legal' && (
-              <>
+              <div>
                 <label style={styles.label}>Код юр. лица (УНП)</label>
                 <input style={styles.input} value={companyCode} onChange={e => setCompanyCode(e.target.value)} placeholder="123456789" />
-              </>
+              </div>
             )}
 
             <label style={styles.label}>Адрес</label>
@@ -314,7 +314,7 @@ function ActForm({ task, onClose }) {
 
     if (navigator.onLine) {
       try {
-        await fetch(`${API}/acts`, {
+        await fetch(API + '/acts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(act),
@@ -396,10 +396,19 @@ function ViewAct({ task, onClose }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`${API}/tasks/${task.id}/act`)
-      .then(r => r.json())
-      .then(data => { setAct(data); setLoading(false) })
-      .catch(() => setLoading(false))
+    let isMounted = true;
+    fetch(API + '/tasks/' + task.id + '/act')
+      .then(r => {
+        if (!r.ok) throw new Error('Акт не найден')
+        return r.json()
+      })
+      .then(data => {
+        if (isMounted) { setAct(data); setLoading(false) }
+      })
+      .catch(() => {
+        if (isMounted) { setLoading(false) }
+      })
+    return () => { isMounted = false }
   }, [task.id])
 
   return (
@@ -422,18 +431,28 @@ function ViewAct({ task, onClose }) {
             
             <p><strong>Работы:</strong></p>
             <div style={{ background: '#f9f9f9', padding: 10, borderRadius: 5, marginBottom: 15 }}>
-              {act.works.map((w, i) => <div key={i}>- {w.description}</div>)}
+              {Array.isArray(act.works) ? (
+                act.works.map((w, i) => <div key={i}>- {w.description || w}</div>)
+              ) : (
+                <div>- {(act.works && act.works.description) ? act.works.description : 'Работы не указаны'}</div>
+              )}
             </div>
 
             <p><strong>Подпись:</strong></p>
-            <img src={act.signatureBase64} alt="Подпись" style={{ width: '100%', border: '1px solid #ccc', borderRadius: 8, background: '#fafafa' }} />
+            {act.signatureBase64 ? (
+              <img src={act.signatureBase64} alt="Подпись" style={{ width: '100%', border: '1px solid #ccc', borderRadius: 8, background: '#fafafa' }} />
+            ) : (
+              <p style={{color: 'red'}}>Подпись отсутствует</p>
+            )}
             
             <p style={{ fontSize: 12, color: '#999', marginTop: 15 }}>
               Дата: {new Date(act.createdAt).toLocaleString()}
             </p>
           </div>
         ) : (
-          <p style={{ textAlign: 'center', color: '#f44336' }}>Акт не найден (возможно, он еще не синхронизирован)</p>
+          <p style={{ textAlign: 'center', color: '#f44336', marginTop: 40 }}>
+            Акт не найден на сервере. <br/>Возможно, бэкенд ещё не обновился.
+          </p>
         )}
       </div>
     </div>
