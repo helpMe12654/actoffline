@@ -14,9 +14,22 @@ fastify.get('/api/tasks', async () => {
 })
 
 fastify.post('/api/tasks', async (request) => {
-  const { address, clientName } = request.body
+  const { address, clientName, type, companyCode, defaultWorks } = request.body
   return await prisma.task.create({
-    data: { address, clientName }
+    data: { 
+      address, 
+      clientName,
+      type,
+      companyCode: companyCode || null,
+      defaultWorks: defaultWorks || null
+    }
+  })
+})
+
+fastify.get('/api/tasks/:id/act', async (request) => {
+  const { id } = request.params
+  return await prisma.act.findFirst({
+    where: { taskId: id }
   })
 })
 
@@ -33,7 +46,6 @@ fastify.post('/api/acts', async (request) => {
     }
   })
 
-  // Меняем статус задания на "done", чтобы было видно, что акт заполнен
   await prisma.task.update({
     where: { id: taskId },
     data: { status: 'done' }
@@ -44,8 +56,8 @@ fastify.post('/api/acts', async (request) => {
 
 const start = async () => {
   try {
-    await fastify.listen(3000, '0.0.0.0')
-    console.log('Сервер: http://localhost:3000')
+    await fastify.listen(process.env.PORT || 3000, '0.0.0.0')
+    console.log('Сервер запущен')
   } catch (err) {
     fastify.log.error(err)
     process.exit(1)

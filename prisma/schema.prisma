@@ -8,13 +8,17 @@ datasource db {
 }
 
 model Task {
-  id         String   @id @default(cuid())
-  address    String
-  clientName String
-  status     String   @default("pending")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  acts       Act[]
+  id          String   @id @default(cuid())
+  address     String
+  clientName  String
+  status      String   @default("pending")
+  type        String   @default("individual")
+  companyCode String?
+  defaultWorks String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  acts        Act[]
 }
 
 model Act {
