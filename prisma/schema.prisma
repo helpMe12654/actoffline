@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
@@ -8,17 +9,17 @@ datasource db {
 }
 
 model Task {
-  id          String   @id @default(cuid())
-  address     String
-  clientName  String
-  status      String   @default("pending")
-  type        String   @default("individual")
-  companyCode String?
+  id           String   @id @default(cuid())
+  address      String
+  clientName   String
+  status       String   @default("pending")
+  type         String   @default("individual")
+  companyCode  String?
   defaultWorks String?
   
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  acts        Act[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  acts         Act[]
 }
 
 model Act {
