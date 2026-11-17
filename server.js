@@ -33,6 +33,18 @@ fastify.get('/api/tasks/:id/act', async (request) => {
   })
 })
 
+fastify.delete('/api/tasks/:id', async (request) => {
+  const { id } = request.params
+  // Сначала удаляем связанный акт
+  await prisma.act.deleteMany({
+    where: { taskId: id }
+  })
+  // Потом саму задачу
+  return await prisma.task.delete({
+    where: { id }
+  })
+})
+
 fastify.post('/api/acts', async (request) => {
   const { taskId, clientFio, works, totalAmount, signatureBase64 } = request.body
   

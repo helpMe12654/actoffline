@@ -111,6 +111,17 @@ export default function App() {
     }
   }
 
+  const handleDeleteTask = async (id) => {
+    if (window.confirm('Вы уверены, что хотите удалить это задание?')) {
+      try {
+        await fetch(`${API}/tasks/${id}`, { method: 'DELETE' })
+        loadTasks()
+      } catch (e) {
+        alert('Ошибка при удалении')
+      }
+    }
+  }
+
   if (selectedTask) {
     return <ActForm task={selectedTask} onClose={() => { setSelectedTask(null); loadTasks(); checkOffline() }} />
   }
@@ -148,18 +159,27 @@ export default function App() {
         {currentTasks.map((task) => (
           <div key={task.id} style={styles.card}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
+              <div style={{ flex: 1 }}>
                 <div style={styles.cardTitle}>
                   {task.clientName} 
                   {task.type === 'legal' && <span style={{fontSize: 12, color: '#2196F3', marginLeft: 5}}>(Юр. лицо)</span>}
                 </div>
                 <div style={styles.cardSub}>📍 {task.address}</div>
               </div>
-              {task.status === 'done' ? (
-                <span style={{ ...styles.badge, backgroundColor: '#E8F5E9', color: '#4CAF50' }}>Выполнено</span>
-              ) : (
-                <span style={{ ...styles.badge, backgroundColor: '#E3F2FD', color: '#2196F3' }}>В работе</span>
-              )}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
+                {task.status === 'done' ? (
+                  <span style={{ ...styles.badge, backgroundColor: '#E8F5E9', color: '#4CAF50' }}>Выполнено</span>
+                ) : (
+                  <span style={{ ...styles.badge, backgroundColor: '#E3F2FD', color: '#2196F3' }}>В работе</span>
+                )}
+                <button 
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, padding: 0, opacity: 0.5 }}
+                  title="Удалить задачу"
+                  onClick={() => handleDeleteTask(task.id)}
+                >
+                  🗑️
+                </button>
+              </div>
             </div>
             {task.status !== 'done' ? (
               <button style={{ ...styles.btnPrimary, marginTop: 15 }} onClick={() => setSelectedTask(task)}>
