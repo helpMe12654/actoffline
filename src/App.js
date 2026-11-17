@@ -274,29 +274,51 @@ function ActForm({ task, onClose }) {
   const canvasRef = useRef(null)
   const isDrawing = useRef(false)
 
+  // Функция для получения точных координат с учетом масштабирования экрана
+  const getCoordinates = (e) => {
+    const canvas = canvasRef.current
+    const rect = canvas.getBoundingClientRect()
+    
+    // Получаем координаты касания или клика
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY
+    
+    // Вычисляем, насколько визуально растянут холст
+    const scaleX = canvas.width / rect.width
+    const scaleY = canvas.height / rect.height
+
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    }
+  }
+
   const startDrawing = (e) => {
+    e.preventDefault() // Запрещаем скролл страницы при рисовании
     isDrawing.current = true
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
-    const rect = canvas.getBoundingClientRect()
-    const x = (e.clientX || e.touches[0].clientX) - rect.left
-    const y = (e.clientY || e.touches[0].clientY) - rect.top
+    const { x, y } = getCoordinates(e)
+    
     ctx.beginPath()
     ctx.moveTo(x, y)
   }
 
   const draw = (e) => {
     if (!isDrawing.current) return
+    e.preventDefault()
+    
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
-    const rect = canvas.getBoundingClientRect()
-    const x = (e.clientX || e.touches[0].clientX) - rect.left
-    const y = (e.clientY || e.touches[0].clientY) - rect.top
+    const { x, y } = getCoordinates(e)
+    
     ctx.lineTo(x, y)
     ctx.stroke()
   }
 
-  const stopDrawing = () => { isDrawing.current = false }
+  const stopDrawing = () => { 
+    isDrawing.current = false 
+  }
 
   const clearCanvas = () => {
     const canvas = canvasRef.current
@@ -376,6 +398,7 @@ function ActForm({ task, onClose }) {
           <input style={styles.input} type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" />
 
           <label style={styles.label}>Подпись клиента</label>
+          {/* Ограничиваем ширину холста и задаем стили для корректного масштабирования */}
           <div style={{ border: '2px dashed #ccc', borderRadius: 8, width: '100%', height: 200, background: '#fafafa', marginTop: 5, marginBottom: 10, overflow: 'hidden' }}>
             <canvas
               ref={canvasRef}
@@ -388,7 +411,7 @@ function ActForm({ task, onClose }) {
               onTouchStart={startDrawing}
               onTouchMove={draw}
               onTouchEnd={stopDrawing}
-              style={{ touchAction: 'none', width: '100%', height: '100%' }}
+              style={{ touchAction: 'none', width: '100%', height: '100%', display: 'block' }}
             />
           </div>
           <button style={{ background: 'none', border: 'none', color: '#2196F3', cursor: 'pointer', padding: 0, fontSize: 14, marginBottom: 20 }} onClick={clearCanvas}>Очистить подпись</button>
