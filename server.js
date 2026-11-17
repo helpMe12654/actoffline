@@ -10,7 +10,11 @@ fastify.get('/api/health', async () => {
 })
 
 fastify.get('/api/tasks', async () => {
-  return await prisma.task.findMany()
+  return await prisma.task.findMany({
+    include: {
+      acts: true
+    }
+  })
 })
 
 fastify.post('/api/tasks', async (request) => {
@@ -26,21 +30,18 @@ fastify.post('/api/tasks', async (request) => {
   })
 })
 
-fastify.get('/api/tasks', async () => {
-  return await prisma.task.findMany({
-    include: {
-      acts: true // Подтягиваем связанные акты
-    }
+fastify.get('/api/tasks/:id/act', async (request) => {
+  const { id } = request.params
+  return await prisma.act.findFirst({
+    where: { taskId: id }
   })
 })
 
 fastify.delete('/api/tasks/:id', async (request) => {
   const { id } = request.params
-  // Сначала удаляем связанный акт
   await prisma.act.deleteMany({
     where: { taskId: id }
   })
-  // Потом саму задачу
   return await prisma.task.delete({
     where: { id }
   })
