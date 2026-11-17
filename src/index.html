@@ -2,11 +2,34 @@
 <html>
 <head>
   
+  <link id="my-manifest-placeholder" rel="manifest" href="">
+  
   <meta charset="utf-8">
   <title>АктОффлайн</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+
+  <script>
+    const manifest = {
+      name: 'АктОффлайн',
+      short_name: 'Акты',
+      start_url: '/',
+      display: 'standalone',
+      background_color: '#f4f7f6',
+      theme_color: '#2196F3',
+      icons: [{
+        src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>",
+        sizes: '512x512',
+        type: 'image/svg+xml'
+      }]
+    };
+    const stringManifest = JSON.stringify(manifest);
+    const blob = new Blob([stringManifest], {type: 'application/json'});
+    const manifestURL = URL.createObjectURL(blob);
+    document.querySelector('#my-manifest-placeholder').setAttribute('href', manifestURL);
+  </script>
 </head>
 <body>
   <div id="root"></div>
