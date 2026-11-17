@@ -1,21 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-  
-  <link id="my-manifest-placeholder" rel="manifest" href="">
-  
   <meta charset="utf-8">
   <title>АктОффлайн</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  
+  <!-- Иконка -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+  
+  <!-- Заглушка для манифеста -->
+  <link id="my-manifest-placeholder" rel="manifest" href="">
 
+  <!-- Скрипт генерации манифеста -->
   <script>
     const manifest = {
       name: 'АктОффлайн',
       short_name: 'Акты',
-      start_url: '/',
+      start_url: window.location.origin + '/',
       display: 'standalone',
       background_color: '#f4f7f6',
       theme_color: '#2196F3',
@@ -30,19 +31,13 @@
     const manifestURL = URL.createObjectURL(blob);
     document.querySelector('#my-manifest-placeholder').setAttribute('href', manifestURL);
   </script>
+
+  <!-- React с CDN -->
+  <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
 </head>
 <body>
   <div id="root"></div>
   <script src="./index.js"></script>
-
-  <script>
-    if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('SW зарегистрирован:', reg))
-          .catch(err => console.error('Ошибка SW:', err))
-      })
-    }
-  </script>
 </body>
 </html>

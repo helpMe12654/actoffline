@@ -1,10 +1,8 @@
 const React = window.React
 const { useState, useEffect, useRef } = React
 
-// Ссылка на твой бэкенд на Render
 const API = 'https://actoffline.onrender.com/api'
 
-// --- СТИЛИ (чтобы не выглядело как Windows 95) ---
 const styles = {
   app: { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', backgroundColor: '#f4f7f6', minHeight: '100vh', paddingBottom: 40 },
   header: { backgroundColor: '#ffffff', padding: '15px 20px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 },
@@ -34,8 +32,7 @@ export default function App() {
   const [offlineCount, setOfflineCount] = useState(0)
   const [syncMessage, setSyncMessage] = useState('')
   
-  // Состояния для вкладок и модалок
-  const [activeTab, setActiveTab] = useState('active') // 'active' | 'done'
+  const [activeTab, setActiveTab] = useState('active')
   const [showAddModal, setShowAddModal] = useState(false)
   const [newAddress, setNewAddress] = useState('')
   const [newClient, setNewClient] = useState('')
@@ -104,7 +101,6 @@ export default function App() {
     return <ActForm task={selectedTask} onClose={() => { setSelectedTask(null); loadTasks(); checkOffline() }} />
   }
 
-  // Фильтрация задач по вкладкам
   const activeTasks = tasks.filter(t => t.status !== 'done')
   const doneTasks = tasks.filter(t => t.status === 'done')
   const currentTasks = activeTab === 'active' ? activeTasks : doneTasks
@@ -119,7 +115,6 @@ export default function App() {
       </div>
 
       <div style={styles.container}>
-        {/* Вкладки */}
         <div style={styles.tabs}>
           <div style={{ ...styles.tab, ...(activeTab === 'active' ? styles.tabActive : {}) }} onClick={() => setActiveTab('active')}>
             Активные ({activeTasks.length})
@@ -154,7 +149,6 @@ export default function App() {
         ))}
       </div>
 
-      {/* Плавающая панель синхронизации */}
       {offlineCount > 0 && (
         <div style={styles.offlineBar}>
           <span>Не синхронизировано: {offlineCount}</span>
@@ -164,7 +158,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Модалка добавления задания */}
       {showAddModal && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
