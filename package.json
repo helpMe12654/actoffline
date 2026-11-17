@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "dev": "parcel src/index.html",
-    "build": "parcel build src/index.html --no-minify"
+    "build": "parcel build src/index.html --no-minify",
+    "start": "node server.js",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^3.15.2",
