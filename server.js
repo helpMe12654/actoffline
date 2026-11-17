@@ -26,10 +26,11 @@ fastify.post('/api/tasks', async (request) => {
   })
 })
 
-fastify.get('/api/tasks/:id/act', async (request) => {
-  const { id } = request.params
-  return await prisma.act.findFirst({
-    where: { taskId: id }
+fastify.get('/api/tasks', async () => {
+  return await prisma.task.findMany({
+    include: {
+      acts: true // Подтягиваем связанные акты
+    }
   })
 })
 

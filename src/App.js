@@ -156,42 +156,55 @@ export default function App() {
         {loading && <p style={{ textAlign: 'center', color: '#777' }}>Загрузка...</p>}
         {!loading && currentTasks.length === 0 && <p style={{ textAlign: 'center', color: '#777', marginTop: 40 }}>Заданий нет</p>}
 
-        {currentTasks.map((task) => (
-          <div key={task.id} style={styles.card}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ flex: 1 }}>
-                <div style={styles.cardTitle}>
-                  {task.clientName} 
-                  {task.type === 'legal' && <span style={{fontSize: 12, color: '#2196F3', marginLeft: 5}}>(Юр. лицо)</span>}
+        {currentTasks.map((task) => {
+          // Берем акт, если он есть
+          const latestAct = task.acts && task.acts.length > 0 ? task.acts[0] : null;
+          // ФИО: из акта или из задания
+          const displayClient = latestAct ? latestAct.clientFio : task.clientName;
+          // Работы: из акта или из задания
+          let displayWorks = task.defaultWorks || '';
+          if (latestAct && Array.isArray(latestAct.works) && latestAct.works.length > 0) {
+             displayWorks = latestAct.works[0].description;
+          }
+
+          return (
+            <div key={task.id} style={styles.card}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={styles.cardTitle}>
+                    {displayClient} 
+                    {task.type === 'legal' && <span style={{fontSize: 12, color: '#2196F3', marginLeft: 5}}>(Юр. лицо)</span>}
+                  </div>
+                  <div style={styles.cardSub}>📍 {task.address}</div>
+                  {displayWorks && <div style={{ fontSize: 14, color: '#333', marginTop: 5 }}>🛠 {displayWorks}</div>}
                 </div>
-                <div style={styles.cardSub}>📍 {task.address}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
+                  {task.status === 'done' ? (
+                    <span style={{ ...styles.badge, backgroundColor: '#E8F5E9', color: '#4CAF50' }}>Выполнено</span>
+                  ) : (
+                    <span style={{ ...styles.badge, backgroundColor: '#E3F2FD', color: '#2196F3' }}>В работе</span>
+                  )}
+                  <button 
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, padding: 0, opacity: 0.5 }}
+                    title="Удалить задачу"
+                    onClick={() => handleDeleteTask(task.id)}
+                  >
+                    🗑️
+                  </button>
+                </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
-                {task.status === 'done' ? (
-                  <span style={{ ...styles.badge, backgroundColor: '#E8F5E9', color: '#4CAF50' }}>Выполнено</span>
-                ) : (
-                  <span style={{ ...styles.badge, backgroundColor: '#E3F2FD', color: '#2196F3' }}>В работе</span>
-                )}
-                <button 
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, padding: 0, opacity: 0.5 }}
-                  title="Удалить задачу"
-                  onClick={() => handleDeleteTask(task.id)}
-                >
-                  🗑️
+              {task.status !== 'done' ? (
+                <button style={{ ...styles.btnPrimary, marginTop: 15 }} onClick={() => setSelectedTask(task)}>
+                  Заполнить акт
                 </button>
-              </div>
+              ) : (
+                <button style={{ ...styles.btnPrimary, backgroundColor: '#f0f0f0', color: '#333', marginTop: 15 }} onClick={() => setViewingTask(task)}>
+                  Просмотреть акт
+                </button>
+              )}
             </div>
-            {task.status !== 'done' ? (
-              <button style={{ ...styles.btnPrimary, marginTop: 15 }} onClick={() => setSelectedTask(task)}>
-                Заполнить акт
-              </button>
-            ) : (
-              <button style={{ ...styles.btnPrimary, backgroundColor: '#f0f0f0', color: '#333', marginTop: 15 }} onClick={() => setViewingTask(task)}>
-                Просмотреть акт
-              </button>
-            )}
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {offlineCount > 0 && (
